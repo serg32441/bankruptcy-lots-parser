@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/providers/trpc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Gavel, Filter, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Gavel, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { filterLots } from "@/lib/demoData";
+import { useApiStatus } from "@/hooks/useApiStatus";
 
 const CATEGORY_LABELS: Record<string, string> = {
   debt: "Дебиторская задолженность",
@@ -47,15 +49,21 @@ export default function Lots() {
   const [status, setStatus] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const { data, isLoading, refetch } = trpc.lots.list.useQuery({
-    page,
-    limit: 20,
-    category: category || undefined,
-    status: status || undefined,
-    search: search || undefined,
-  });
+  const apiConnected = useApiStatus();
 
-  const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
+  const { data: apiData } = trpc.lots.list.useQuery(
+    { page, limit: 20, category: category || undefined, status: status || undefined, search: search || undefined },
+    { retry: false, refetchOnWindowFocus: false, enabled: apiConnected === true }
+  );
+
+  const demoData = useMemo(() =>
+    filterLots({ page, limit: 20, category: category || undefined, status: status || undefined, search: search || undefined }),
+    [page, category, status, search]
+  );
+
+  const data = apiConnected === true && apiData ? apiData : demoData;
+  const totalPages = Math.ceil(data.total / data.limit);
+  const isLoading = apiConnected === null;
 
   const formatPrice = (price: string | null) => {
     if (!price) return "—";
@@ -68,7 +76,6 @@ export default function Lots() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -77,11 +84,11 @@ export default function Lots() {
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Дебиторская задолженность с торгов по банкротству
+            {apiConnected === false && <span className="text-amber-500 ml-2">(демо-данные)</span>}
           </p>
         </div>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -94,9 +101,9 @@ export default function Lots() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
-                <SelectTrigger className="w-[220px]">
+                <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Категория" />
                 </SelectTrigger>
@@ -111,7 +118,7 @@ export default function Lots() {
               </Select>
 
               <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Статус" />
                 </SelectTrigger>
                 <SelectContent>
@@ -121,34 +128,25 @@ export default function Lots() {
                   <SelectItem value="cancelled">Отменён</SelectItem>
                 </SelectContent>
               </Select>
-
-              <Button variant="outline" onClick={() => refetch()}>
-                Обновить
-              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Results Count */}
       <div className="text-sm text-gray-500">
-        Найдено: {data?.total ?? 0} лотов
+        Найдено: {data.total} лотов
       </div>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <div className="animate-pulse text-gray-400">Загрузка...</div>
             </div>
-          ) : !data?.items.length ? (
+          ) : !data.items.length ? (
             <div className="text-center py-20 text-gray-500">
               <Gavel className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium">Лоты не найдены</p>
-              <p className="text-sm mt-1">
-                Сгенерируйте демо-данные в разделе &quot;Парсер&quot; или измените фильтры
-              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -205,7 +203,6 @@ export default function Lots() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">

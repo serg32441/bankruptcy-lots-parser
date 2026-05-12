@@ -12,13 +12,22 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import { demoStats } from "@/lib/demoData";
+import { useApiStatus } from "@/hooks/useApiStatus";
 
 export default function Dashboard() {
-  const { data: stats, isLoading } = trpc.parser.stats.useQuery();
+  const apiConnected = useApiStatus();
+
+  const { data: apiStats } = trpc.parser.stats.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+    enabled: apiConnected === true,
+  });
+
+  const stats = apiConnected && apiStats ? apiStats : demoStats;
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Дашборд
@@ -28,7 +37,6 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="pb-2">
@@ -39,7 +47,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isLoading ? "..." : stats?.debtors ?? 0}
+              {apiConnected === null ? "..." : stats.debtors}
             </div>
             <p className="text-xs text-gray-500 mt-1">В базе</p>
           </CardContent>
@@ -54,7 +62,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isLoading ? "..." : stats?.notices ?? 0}
+              {apiConnected === null ? "..." : stats.notices}
             </div>
             <p className="text-xs text-gray-500 mt-1">Активных торгов</p>
           </CardContent>
@@ -69,7 +77,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {isLoading ? "..." : stats?.lots ?? 0}
+              {apiConnected === null ? "..." : stats.lots}
             </div>
             <p className="text-xs text-gray-500 mt-1">На торгах</p>
           </CardContent>
@@ -91,7 +99,6 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
@@ -154,7 +161,6 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Info Banner */}
       <Card className="bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
@@ -164,9 +170,11 @@ export default function Dashboard() {
                 О проекте (MVP)
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                Это минимально жизнеспособный продукт для работы с торгами по банкротству. 
-                В текущей версии используются демонстрационные данные в структуре ЕФРСБ (fedresurs.ru).
-                Для подключения реального API замените источник данных в разделе &quot;Парсер&quot;.
+                {apiConnected === true
+                  ? "Backend подключен. Данные загружаются из PostgreSQL базы."
+                  : apiConnected === false
+                  ? "Сейчас показаны демо-данные. Для подключения реальной базы настройте DATABASE_URL и перезапустите сервер."
+                  : "Проверка подключения к API..."}
               </p>
               <div className="flex items-center gap-2 mt-3">
                 <CheckCircle className="w-4 h-4 text-green-600" />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/providers/trpc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Users, Loader2, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { filterDebtors } from "@/lib/demoData";
+import { useApiStatus } from "@/hooks/useApiStatus";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "В производстве",
@@ -28,17 +30,24 @@ export default function Debtors() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  const { data, isLoading } = trpc.debtors.list.useQuery({
-    page,
-    limit: 20,
-    search: search || undefined,
-  });
+  const apiConnected = useApiStatus();
 
-  const totalPages = data ? Math.ceil(data.total / data.limit) : 0;
+  const { data: apiData } = trpc.debtors.list.useQuery(
+    { page, limit: 20, search: search || undefined },
+    { retry: false, refetchOnWindowFocus: false, enabled: apiConnected === true }
+  );
+
+  const demoData = useMemo(() =>
+    filterDebtors({ page, limit: 20, search: search || undefined }),
+    [page, search]
+  );
+
+  const data = apiConnected === true && apiData ? apiData : demoData;
+  const totalPages = Math.ceil(data.total / data.limit);
+  const isLoading = apiConnected === null;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -47,11 +56,11 @@ export default function Debtors() {
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
             Список должников из реестра банкротств
+            {apiConnected === false && <span className="text-amber-500 ml-2">(демо-данные)</span>}
           </p>
         </div>
       </div>
 
-      {/* Search */}
       <Card>
         <CardContent className="pt-6">
           <div className="relative max-w-md">
@@ -66,25 +75,20 @@ export default function Debtors() {
         </CardContent>
       </Card>
 
-      {/* Results Count */}
       <div className="text-sm text-gray-500">
-        Найдено: {data?.total ?? 0} должников
+        Найдено: {data.total} должников
       </div>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <div className="animate-pulse text-gray-400">Загрузка...</div>
             </div>
-          ) : !data?.items.length ? (
+          ) : !data.items.length ? (
             <div className="text-center py-20 text-gray-500">
               <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium">Должники не найдены</p>
-              <p className="text-sm mt-1">
-                Сгенерируйте демо-данные в разделе &quot;Парсер&quot;
-              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -132,7 +136,6 @@ export default function Debtors() {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
