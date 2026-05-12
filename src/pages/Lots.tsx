@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { trpc } from "@/providers/trpc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ import {
 } from "@/components/ui/table";
 import { Search, Gavel, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { filterLots } from "@/lib/demoData";
-import { useApiStatus } from "@/hooks/useApiStatus";
 
 const CATEGORY_LABELS: Record<string, string> = {
   debt: "Дебиторская задолженность",
@@ -49,21 +47,12 @@ export default function Lots() {
   const [status, setStatus] = useState<string>("");
   const [search, setSearch] = useState("");
 
-  const apiConnected = useApiStatus();
-
-  const { data: apiData } = trpc.lots.list.useQuery(
-    { page, limit: 20, category: category || undefined, status: status || undefined, search: search || undefined },
-    { retry: false, refetchOnWindowFocus: false, enabled: apiConnected === true }
-  );
-
-  const demoData = useMemo(() =>
+  const data = useMemo(() =>
     filterLots({ page, limit: 20, category: category || undefined, status: status || undefined, search: search || undefined }),
     [page, category, status, search]
   );
 
-  const data = apiConnected === true && apiData ? apiData : demoData;
   const totalPages = Math.ceil(data.total / data.limit);
-  const isLoading = apiConnected === null;
 
   const formatPrice = (price: string | null) => {
     if (!price) return "—";
@@ -76,17 +65,14 @@ export default function Lots() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Gavel className="w-8 h-8 text-blue-600" />
-            Лоты торгов
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Дебиторская задолженность с торгов по банкротству
-            {apiConnected === false && <span className="text-amber-500 ml-2">(демо-данные)</span>}
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <Gavel className="w-8 h-8 text-blue-600" />
+          Лоты торгов
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-1">
+          Дебиторская задолженность с торгов по банкротству
+        </p>
       </div>
 
       <Card>
@@ -102,13 +88,13 @@ export default function Lots() {
               />
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Select value={category} onValueChange={(v) => { setCategory(v); setPage(1); }}>
+              <Select value={category || "all"} onValueChange={(v) => { setCategory(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Категория" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все категории</SelectItem>
+                  <SelectItem value="all">Все категории</SelectItem>
                   <SelectItem value="debt">Дебиторская задолженность</SelectItem>
                   <SelectItem value="realty">Недвижимость</SelectItem>
                   <SelectItem value="movables">Движимое имущество</SelectItem>
@@ -117,12 +103,12 @@ export default function Lots() {
                 </SelectContent>
               </Select>
 
-              <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+              <Select value={status || "all"} onValueChange={(v) => { setStatus(v === "all" ? "" : v); setPage(1); }}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Статус" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все статусы</SelectItem>
+                  <SelectItem value="all">Все статусы</SelectItem>
                   <SelectItem value="active">Активен</SelectItem>
                   <SelectItem value="completed">Завершён</SelectItem>
                   <SelectItem value="cancelled">Отменён</SelectItem>
@@ -139,11 +125,7 @@ export default function Lots() {
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-pulse text-gray-400">Загрузка...</div>
-            </div>
-          ) : !data.items.length ? (
+          {!data.items.length ? (
             <div className="text-center py-20 text-gray-500">
               <Gavel className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium">Лоты не найдены</p>
@@ -209,20 +191,10 @@ export default function Lots() {
             Страница {page} из {totalPages}
           </p>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-            >
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

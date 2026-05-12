@@ -1,5 +1,4 @@
 import { Link } from "react-router";
-import { trpc } from "@/providers/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,19 +12,8 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { demoStats } from "@/lib/demoData";
-import { useApiStatus } from "@/hooks/useApiStatus";
 
 export default function Dashboard() {
-  const apiConnected = useApiStatus();
-
-  const { data: apiStats } = trpc.parser.stats.useQuery(undefined, {
-    retry: false,
-    refetchOnWindowFocus: false,
-    enabled: apiConnected === true,
-  });
-
-  const stats = apiConnected && apiStats ? apiStats : demoStats;
-
   return (
     <div className="space-y-8">
       <div>
@@ -41,14 +29,11 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Должники
+              <Users className="w-4 h-4" />Должники
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {apiConnected === null ? "..." : stats.debtors}
-            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{demoStats.debtors}</div>
             <p className="text-xs text-gray-500 mt-1">В базе</p>
           </CardContent>
         </Card>
@@ -56,14 +41,11 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-amber-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Объявления торгов
+              <FileText className="w-4 h-4" />Объявления торгов
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {apiConnected === null ? "..." : stats.notices}
-            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{demoStats.notices}</div>
             <p className="text-xs text-gray-500 mt-1">Активных торгов</p>
           </CardContent>
         </Card>
@@ -71,14 +53,11 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <Gavel className="w-4 h-4" />
-              Лоты
+              <Gavel className="w-4 h-4" />Лоты
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white">
-              {apiConnected === null ? "..." : stats.lots}
-            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">{demoStats.lots}</div>
             <p className="text-xs text-gray-500 mt-1">На торгах</p>
           </CardContent>
         </Card>
@@ -86,14 +65,11 @@ export default function Dashboard() {
         <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Категория
+              <TrendingUp className="w-4 h-4" />Категория
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">
-              Дебиторская задолженность
-            </div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">Дебиторская задолженность</div>
             <p className="text-xs text-gray-500 mt-1">Фокус MVP</p>
           </CardContent>
         </Card>
@@ -103,19 +79,13 @@ export default function Dashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Gavel className="w-5 h-5 text-blue-600" />
-              Просмотр лотов
+              <Gavel className="w-5 h-5 text-blue-600" />Просмотр лотов
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Просматривайте все лоты по дебиторской задолженности с фильтрами и поиском.
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Все лоты с фильтрами и поиском.</p>
             <Link to="/lots">
-              <Button className="w-full" variant="outline">
-                Перейти к лотам
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Button className="w-full" variant="outline">Перейти к лотам <ArrowRight className="w-4 h-4 ml-2" /></Button>
             </Link>
           </CardContent>
         </Card>
@@ -123,19 +93,13 @@ export default function Dashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-600" />
-              База должников
+              <Users className="w-5 h-5 text-blue-600" />База должников
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Просматривайте информацию о должниках, их делах и имуществе.
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Информация о должниках.</p>
             <Link to="/debtors">
-              <Button className="w-full" variant="outline">
-                Перейти к должникам
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Button className="w-full" variant="outline">Перейти к должникам <ArrowRight className="w-4 h-4 ml-2" /></Button>
             </Link>
           </CardContent>
         </Card>
@@ -143,19 +107,13 @@ export default function Dashboard() {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <Database className="w-5 h-5 text-blue-600" />
-              Запуск парсера
+              <Database className="w-5 h-5 text-blue-600" />Парсер
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Запустите генерацию демо-данных или обновление из ЕФРСБ.
-            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Управление данными и API.</p>
             <Link to="/parser">
-              <Button className="w-full" variant="outline">
-                Управление данными
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <Button className="w-full" variant="outline">Управление <ArrowRight className="w-4 h-4 ml-2" /></Button>
             </Link>
           </CardContent>
         </Card>
@@ -166,21 +124,11 @@ export default function Dashboard() {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300">
-                О проекте (MVP)
-              </h3>
-              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                {apiConnected === true
-                  ? "Backend подключен. Данные загружаются из PostgreSQL базы."
-                  : apiConnected === false
-                  ? "Сейчас показаны демо-данные. Для подключения реальной базы настройте DATABASE_URL и перезапустите сервер."
-                  : "Проверка подключения к API..."}
-              </p>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-300">О проекте (MVP)</h3>
+              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">Демо-данные в формате ЕФРСБ (fedresurs.ru).</p>
               <div className="flex items-center gap-2 mt-3">
                 <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-xs text-green-700 dark:text-green-400">
-                  Стек: React + tRPC + Drizzle + PostgreSQL (Supabase-ready)
-                </span>
+                <span className="text-xs text-green-700 dark:text-green-400">React + tRPC + Drizzle + PostgreSQL</span>
               </div>
             </div>
           </div>

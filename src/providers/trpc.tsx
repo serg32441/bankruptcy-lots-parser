@@ -7,14 +7,19 @@ import type { ReactNode } from "react";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-// Отключаем кеш для tRPC запросов — всегда свежие данные
+// Отключаем retry и кеш для быстрой загрузки на мобильных
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
       gcTime: 0,
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      networkMode: "offlineFirst",
+    },
+    mutations: {
+      retry: false,
     },
   },
 });
@@ -35,6 +40,7 @@ const trpcClient = trpc.createClient({
           ...(init ?? {}),
           credentials: "include",
           cache: "no-store",
+          signal: AbortSignal.timeout(1000),
         });
       },
     }),
