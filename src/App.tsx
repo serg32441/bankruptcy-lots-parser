@@ -4,6 +4,8 @@ import Dashboard from "./pages/Dashboard";
 import Lots from "./pages/Lots";
 import Debtors from "./pages/Debtors";
 import Parser from "./pages/Parser";
+import Analysis from "./pages/Analysis";
+import Notices from "./pages/Notices";
 
 export default function App() {
   return (
@@ -11,7 +13,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/lots" element={<Lots />} />
+        <Route path="/notices" element={<Notices />} />
         <Route path="/debtors" element={<Debtors />} />
+        <Route path="/analysis" element={<Analysis />} />
         <Route path="/parser" element={<Parser />} />
       </Routes>
     </Layout>

@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -12,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, Users, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
-import { filterDebtors } from "@/lib/demoData";
+import { trpc } from "@/providers/trpc";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "В производстве",
@@ -20,20 +21,21 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  active: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
-  completed: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+  active: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  completed: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
 };
 
 export default function Debtors() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  const data = useMemo(() =>
-    filterDebtors({ page, limit: 20, search: search || undefined }),
-    [page, search]
-  );
+  const { data, isLoading } = trpc.debtors.list.useQuery({
+    page,
+    limit: 20,
+    search: search || undefined,
+  });
 
-  const totalPages = Math.ceil(data.total / data.limit);
+  const totalPages = Math.ceil((data?.total ?? 0) / 20);
 
   return (
     <div className="space-y-6">
@@ -43,7 +45,7 @@ export default function Debtors() {
           Должники
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Список должников из реестра банкротств
+          Реестр должников из базы банкротств
         </p>
       </div>
 
@@ -62,52 +64,59 @@ export default function Debtors() {
       </Card>
 
       <div className="text-sm text-gray-500">
-        Найдено: {data.total} должников
+        {isLoading ? (
+          <Skeleton className="h-4 w-32" />
+        ) : (
+          `Найдено: ${data?.total ?? 0} должников`
+        )}
       </div>
 
       <Card>
         <CardContent className="p-0">
-          {!data.items.length ? (
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : !data?.items.length ? (
             <div className="text-center py-20 text-gray-500">
               <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium">Должники не найдены</p>
+              <p className="text-sm mt-1">Загрузите данные в разделе «Парсер»</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="bg-gray-50/50 dark:bg-gray-800/50">
                     <TableHead>Наименование</TableHead>
                     <TableHead>ИНН / ОГРН</TableHead>
                     <TableHead>Регион</TableHead>
                     <TableHead>Дело</TableHead>
                     <TableHead>Статус</TableHead>
-                    <TableHead>Категория</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data.items.map((debtor) => (
                     <TableRow key={debtor.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <TableCell className="font-medium">
-                        {debtor.name}
+                      <TableCell className="font-medium max-w-xs">
+                        <p className="truncate" title={debtor.name}>{debtor.name}</p>
                       </TableCell>
                       <TableCell className="text-sm font-mono">
-                        <div>ИНН: {debtor.inn}</div>
-                        <div className="text-gray-500">ОГРН: {debtor.ogrn}</div>
+                        <div className="text-gray-700 dark:text-gray-300">ИНН: {debtor.inn || "—"}</div>
+                        <div className="text-gray-500 text-xs">ОГРН: {debtor.ogrn || "—"}</div>
                       </TableCell>
-                      <TableCell className="text-sm">
-                        {debtor.region}
+                      <TableCell className="text-sm text-gray-600 dark:text-gray-400">
+                        {debtor.region || "—"}
                       </TableCell>
-                      <TableCell className="font-mono text-sm text-blue-600">
-                        {debtor.caseNumber}
+                      <TableCell className="font-mono text-sm text-blue-600 dark:text-blue-400">
+                        {debtor.caseNumber || "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_COLORS[debtor.caseStatus ?? "active"] ?? ""}>
+                        <Badge className={STATUS_COLORS[debtor.caseStatus ?? "active"]}>
                           {STATUS_LABELS[debtor.caseStatus ?? "active"] ?? debtor.caseStatus}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-500">
-                        {debtor.category}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -121,7 +130,7 @@ export default function Debtors() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            Страница {page} из {totalPages}
+            Стр. {page} из {totalPages}
           </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>

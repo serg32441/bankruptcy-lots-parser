@@ -7,19 +7,17 @@ import type { ReactNode } from "react";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-// Отключаем retry и кеш для быстрой загрузки на мобильных
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0,
-      gcTime: 0,
-      retry: false,
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      networkMode: "offlineFirst",
+      refetchOnMount: true,
     },
     mutations: {
-      retry: false,
+      retry: 0,
     },
   },
 });
@@ -30,17 +28,13 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
-        return {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-        };
+        return { "Cache-Control": "no-cache" };
       },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
-          cache: "no-store",
-          signal: AbortSignal.timeout(1000),
+          signal: AbortSignal.timeout(60_000),
         });
       },
     }),
