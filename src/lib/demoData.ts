@@ -120,6 +120,8 @@ export const demoStats = {
   debtors: demoDebtors.length,
   notices: demoLots.length,
   lots: demoLots.length,
+  volume: "480.8 млн ₽",
+  discount: "53%",
 };
 
 // Фильтрация лотов
