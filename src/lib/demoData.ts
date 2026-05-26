@@ -117,12 +117,59 @@ export const demoLots: DemoLot[] = Array.from({length: 20}, (_, i) => {
 });
 
 export const demoStats = {
+  newLots: 1284,
+  newLotsChange: "+18%",
+  avgDiscount: "42%",
+  avgDiscountChange: "−6 п.п.",
+  todayAuctions: 96,
+  urgentAuctions: 12,
   debtors: demoDebtors.length,
   notices: demoLots.length,
   lots: demoLots.length,
   volume: "480.8 млн ₽",
   discount: "53%",
 };
+
+export interface Recommendation {
+  id: number;
+  title: string;
+  location: string;
+  discount: string;
+}
+
+export const demoRecommendations: Recommendation[] = [
+  { id: 1, title: "Квартира 54 м²", location: "Москва", discount: "-38%" },
+  { id: 2, title: "Toyota Camry 2019", location: "Казань", discount: "-31%" },
+  { id: 3, title: "Склад 820 м²", location: "Ростов", discount: "-46%" },
+];
+
+export const demoChartData = [
+  { day: "Пн", value: 45 },
+  { day: "Вт", value: 72 },
+  { day: "Ср", value: 58 },
+  { day: "Чт", value: 90 },
+  { day: "Пт", value: 65 },
+  { day: "Сб", value: 110 },
+  { day: "Вс", value: 85 },
+];
+
+export interface ActualLot {
+  id: number;
+  title: string;
+  region: string;
+  startPrice: string;
+  discount: string;
+  endDate: string;
+  status: string;
+  statusColor: string;
+}
+
+export const demoActualLots: ActualLot[] = [
+  { id: 1, title: "Квартира 2-к, 54 м²", region: "Санкт-Петербург", startPrice: "6 450 000 ₽", discount: "−34%", endDate: "сегодня 18:00", status: "идут торги", statusColor: "blue" },
+  { id: 2, title: "Земельный участок 12 сот.", region: "Краснодарский край", startPrice: "1 280 000 ₽", discount: "−51%", endDate: "завтра 12:30", status: "приём заявок", statusColor: "green" },
+  { id: 3, title: "Mercedes-Benz GLC 2020", region: "Москва", startPrice: "2 950 000 ₽", discount: "−28%", endDate: "29 мая", status: "новый", statusColor: "blue" },
+  { id: 4, title: "Дебиторская задолженность", region: "Новосибирск", startPrice: "840 000 ₽", discount: "−63%", endDate: "31 мая", status: "риск высокий", statusColor: "red" },
+];
 
 // Фильтрация лотов
 export function filterLots(
