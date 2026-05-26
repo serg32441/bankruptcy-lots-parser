@@ -10,7 +10,7 @@ export const lotsRouter = createRouter({
     .input(
       z.object({
         page: z.number().min(1).default(1),
-        limit: z.number().min(1).max(100).default(20),
+        limit: z.number().min(1).max(500).default(20),
         category: z.string().optional(),
         status: z.string().optional(),
         minPrice: z.number().optional(),
