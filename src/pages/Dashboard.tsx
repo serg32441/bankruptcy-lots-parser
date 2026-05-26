@@ -9,7 +9,7 @@ import {
   ArrowRight,
   TrendingDown,
   BarChart2,
-  CircleDollarSign,
+  Tag,
   Activity,
 } from "lucide-react";
 import {
@@ -57,77 +57,57 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <Activity className="w-4 h-4" />Активных лотов
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stats?.activeLots ?? 0}
+        {[
+          {
+            icon: <Activity className="w-5 h-5 text-blue-500" />,
+            iconBg: "bg-blue-50 dark:bg-blue-900/20",
+            label: "Активных лотов",
+            value: loading ? null : (stats?.activeLots ?? 0),
+            desc: "Дебиторская задолженность",
+          },
+          {
+            icon: <Tag className="w-5 h-5 text-amber-500" />,
+            iconBg: "bg-amber-50 dark:bg-amber-900/20",
+            label: "Объём на торгах",
+            value: loading ? null : formatCurrency(stats?.totalValue ?? 0),
+            desc: "Начальные цены",
+          },
+          {
+            icon: <TrendingDown className="w-5 h-5 text-green-500" />,
+            iconBg: "bg-green-50 dark:bg-green-900/20",
+            label: "Средняя скидка",
+            value: analysisQ.isLoading ? null : `${analysis?.avgDiscount ?? 0}%`,
+            desc: "От номинала долга",
+            valueClass: "text-green-600 dark:text-green-400",
+          },
+          {
+            icon: <Users className="w-5 h-5 text-purple-500" />,
+            iconBg: "bg-purple-50 dark:bg-purple-900/20",
+            label: "Должников",
+            value: loading ? null : (stats?.debtors ?? 0),
+            desc: "В реестре банкротств",
+          },
+        ].map((card, i) => (
+          <Card key={i} className="border-0 shadow-sm">
+            <CardContent className="pt-4 pb-4 px-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center flex-shrink-0`}>
+                  {card.icon}
+                </div>
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{card.label}</span>
               </div>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Дебиторская задолженность</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <CircleDollarSign className="w-4 h-4" />Объём на торгах
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-24" />
-            ) : (
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(stats?.totalValue ?? 0)}
-              </div>
-            )}
-            <p className="text-xs text-gray-500 mt-1">Начальные цены</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <TrendingDown className="w-4 h-4" />Средняя скидка
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {analysisQ.isLoading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {analysis?.avgDiscount ?? 0}%
-              </div>
-            )}
-            <p className="text-xs text-gray-500 mt-1">От номинала долга</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <Users className="w-4 h-4" />Должников
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-16" />
-            ) : (
-              <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stats?.debtors ?? 0}
-              </div>
-            )}
-            <p className="text-xs text-gray-500 mt-1">В реестре банкротств</p>
-          </CardContent>
-        </Card>
+              <div className="border-t border-dashed border-gray-200 dark:border-gray-700 mb-3" />
+              {card.value === null ? (
+                <Skeleton className="h-9 w-20 mb-1" />
+              ) : (
+                <div className={`text-3xl font-bold ${card.valueClass ?? "text-gray-900 dark:text-white"}`}>
+                  {card.value}
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-1">{card.desc}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Charts */}
